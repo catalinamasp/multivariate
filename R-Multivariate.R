@@ -14,6 +14,23 @@ library(dplyr)
 setwd("~/Documents/UNIMI/Multivariate analysis/")
 dataset <- readxl::read_xlsx("G20.xlsx")
 
+setwd("C:/Users/pc/Desktop/Data access/multivariate")
+dataset <- readxl::read_xlsx("G20.xlsx")
 summary(dataset)
 
-dataset$`Human Rights Score 2017`
+#Converting column from character to numeric  
+dataset[, c(3,6,14,15)] <- sapply(dataset[, c(3,6,14,15)], as.numeric)
+
+
+#Rename variables' name
+dataset <- rename(dataset, c(EFP = 'Total Ecological Footprint [gha per capita]',
+                             HRS = 'Human Rights Score 2017',
+                             POL = Polity,
+                             GDP = 'GDP annual growth',
+                             POP = 'Population Growth',
+                             URB = '%Urban Pop',
+                             AGR = '% Agriculture',
+                             MAN = '% Manufacture',
+                             LAND = land,
+                             AIR = Pollution,
+                             EDU = EDUC))
