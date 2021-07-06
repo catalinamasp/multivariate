@@ -1,41 +1,32 @@
 #MULTIVARIATE ANALYSIS
 
 library(dplyr)
+library(ggplot2)
+
+rm(list = ls())
 
 setwd("C:/Users/pc/Desktop/Data access/multivariate")
-dataset <- readxl::read_xlsx("Dataset-Final.xlsx")
+dataset <- readxl::read_xlsx("Dataset_CatalinaSimone.xlsx")
 
 summary(dataset)
 
+#Creating a new dataset without missing values
+data.nomiss <- na.omit(dataset)
 
-#Converting column from character to numeric  
-dataset[, c(6,14,15)] <- sapply(dataset[, c(6,14,15)], as.numeric)
+#Thousands and decimals
+options(scipen = 99)
 
-#Removing missing values
-dataset <- na.omit(dataset)
-
-#Rename variables' name
-dataset <- rename(dataset, c(EFP = 'Total Ecological Footprint [gha per capita]',
-                             HRS = 'Human Rights Score 2017',
-                             POL = Polity,
-                             GDP = 'GDP annual growth',
-                             POP = 'Population Growth',
-                             URB = '%Urban Pop',
-                             AGR = '% Agriculture',
-                             MAN = '% Manufacture',
-                             LAND = land,
-                             AIR = Pollution,
-                             EDU = EDUC))
 
 #Checking the bivariate regression
-lm <- lm(EFP ~ HRS, data = dataset)
+lm <- lm(EFP ~ HRS, data = data.nomiss)
 summary(lm)
 
-#L'incremento di un'unità nel rispetto dei diritti umani, aumenta l'impatto ambientale di 0.9.
+#One point increase in Human Rights Score, rises the EFP by 0.9.
+
+
 
 #Plotting HRS by country
-library(ggplot2)
-dataset %>% 
+data.nomiss %>% 
   ggplot(aes(x = Country, y = HRS))+
   geom_col()+
   ylab("HRS") + 
@@ -44,9 +35,43 @@ dataset %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-#Creating trade
-dataset$TRADE <- log(1 + dataset$IMP + dataset$EXP)
 
-#Multivariate model
-mod.mult <- lm(EFP ~ TRADE + GDP + URB, data = dataset)
+#Creating TRADE: the log of one plus the sum of a country’s imports and exports
+data.nomiss$TRADE <- log(1 + data.nomiss$IMP + data.nomiss$EXP)
+
+#Creating GDP per capita by country
+data.nomiss$GDPcap <- data.nomiss$GDP/data.nomiss$POP
+
+
+
+# 1.Regressing EFP on HRS and GDPcap
+mod.mult <- lm(EFP ~ HRS + GDPcap, data = data.nomiss)
 summary(mod.mult)
+
+#Only GDPcap significant
+
+# 2.Regressing the ecological footprint on human rights score, trade and GDP per capita.
+mod.mult1 <- lm(EFP ~ HRS + TRADE + GDPcap, data = data.nomiss)
+summary(mod.mult1)
+
+#Only GPDcap is significant. All the betas are positive and smaller than 0. (just a quick note)
+
+# 3.Regressing the ecological footprint on human rights score, polity and trade.
+mod.mult_try <- lm(EFP ~ HRS + TRADE + POL, data = data.nomiss)
+summary(mod.mult_try)
+
+#Human Rights Score and Trade results significant in explaining the ecological footprint.
+#One point increase in HRS rises the EFP by 1.1, while one point in TRADE, rises the EFP by 0.9.
+
+
+
+#Share of GDP by economic sectors. Import dataset created with data from World Bank.
+eco.sector <- readxl::read_xlsx("GDP_by_sector_wb.xlsx")
+eco.sector <- na.omit(eco.sector)
+
+
+#CO2 PER CAPITA
+
+
+
+
